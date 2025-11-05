@@ -219,7 +219,7 @@ function MobileFlow() {
             <img src="/logo.png" alt="" className="h-15 mb-10" />
 
             <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            <p className="text-lg font-secondary text-black/60 -mt-1 mb-10">which best describes you?</p>
+            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">which best describes you?</p>
 
             <OptionAutoAdvanceList
               onPick={(val) => saveAndGo("role", val)}
@@ -249,7 +249,7 @@ function MobileFlow() {
             <h2 className="text-4xl font-primary font-semibold mb-4">Mr. {firstName(lead.name)},</h2>
             <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p>
 
-            <p className="text-2xl font-secondary font-medium mt-10 mb-10">
+            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">
               What kind of business do you currently operate?
             </p>
 
@@ -281,9 +281,9 @@ function MobileFlow() {
             <img src="/logo.png" alt="" className="h-15 mb-10" />
 
             <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p>
+            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
 
-            <p className="text-lg font-secondary text-black/60 -mt-1 mb-10">What’s your available investment range for expansion?</p>
+            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">What’s your available investment range for expansion?</p>
 
             <OptionAutoAdvanceList
               onPick={(v) => saveAndGo("investment_range", v)}
@@ -312,9 +312,9 @@ function MobileFlow() {
             <img src="/logo.png" alt="" className="h-15 mb-10" />
 
             <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p>
+            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
 
-            <p className="text-lg font-secondary text-black/60 -mt-1 mb-10">When is the best time for our team to reach you?</p>
+            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">When is the best time for our team to reach you?</p>
 
             <OptionAutoAdvanceList
               options={[
@@ -345,9 +345,9 @@ function MobileFlow() {
             <img src="/logo.png" alt="" className="h-15 mb-10" />
 
             <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p>
+            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
 
-            <p className="text-lg font-secondary text-black/60 -mt-1 mb-10">What type of franchise are you most interested in?</p>
+            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">What type of franchise are you most interested in?</p>
 
             <OptionAutoAdvanceList
               options={[
@@ -377,9 +377,9 @@ function MobileFlow() {
             <img src="/logo.png" alt="" className="h-15 mb-10" />
 
             <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p>
+            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
 
-            <p className="text-lg font-secondary text-black/60 -mt-1 mb-10">What’s your investment budget?</p>
+            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">What’s your investment budget?</p>
 
             <OptionAutoAdvanceList
               options={[
@@ -408,9 +408,9 @@ function MobileFlow() {
             <img src="/logo.png" alt="" className="h-15 mb-10" />
 
             <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p>
+            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
 
-            <p className="text-lg font-secondary text-black/60 -mt-1 mb-10">When is a good time for us to contact you?</p>
+            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">When is a good time for us to contact you?</p>
 
             <OptionAutoAdvanceList
               options={[
@@ -440,9 +440,9 @@ function MobileFlow() {
             <img src="/logo.png" alt="" className="h-15 mb-10" />
 
             <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p>
+            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
 
-            <p className="text-lg font-secondary text-black/60 -mt-1 mb-10">What kind of business are you most excited to start?</p>
+            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">What kind of business are you most excited to start?</p>
 
             <OptionAutoAdvanceList
               options={[
@@ -472,9 +472,9 @@ function MobileFlow() {
             <img src="/logo.png" alt="" className="h-15 mb-10" />
 
             <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p>
+            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
 
-            <p className="text-lg font-secondary text-black/60 -mt-1 mb-10">What’s your estimated investment capacity?</p>
+            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">What’s your estimated investment capacity?</p>
 
             <OptionAutoAdvanceList
               options={[
@@ -503,9 +503,9 @@ function MobileFlow() {
             <img src="/logo.png" alt="" className="h-15 mb-10" />
 
             <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p>
+            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
 
-            <p className="text-lg font-secondary text-black/60 -mt-1 mb-10"> When are you planning to start your business?</p>
+            <p className="text-xl font-secondary text-black/60 mt-5 mb-10"> When are you planning to start your business?</p>
 
             <OptionAutoAdvanceList
               options={[
@@ -537,7 +537,7 @@ function MobileFlow() {
               <img src="/smily.png" alt="" className="h-30 w-30" />
             </div>
 
-            <h2 className="mt-15 text-4xl leading-8 font-primary font-bold text-black/90">
+            <h2 className="mt-15 text-4xl leading-8 font-secondary font-bold text-black/90">
               Thank you <span className="text-black mb-2">{firstName(lead.name)}</span> <br />
               <span className="mb-4">for your interest </span> <br /> <span className="mb-2"> in Cake Stories</span>
             </h2>
