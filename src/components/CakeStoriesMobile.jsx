@@ -537,7 +537,7 @@ function MobileFlow() {
               <img src="/smily.png" alt="" className="h-30 w-30" />
             </div>
 
-            <h2 className="mt-12 text-4xl leading-tight font-secondary font-bold text-black/90 text-center">
+            <h2 className="mt-12 text-4xl leading-tight font-primary font-bold text-black/90 text-center">
   Thank you <span className="text-black">{firstName(lead.name)}</span><br />
   <span>for your interest</span><br />
   <span>in Cake Stories</span>
