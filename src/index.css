@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* Local Font Setup */
+
+@font-face {
+  font-family: "Raleway";
+  src: url("/public/fonts/Raleway.ttf") format("truetype");
+  font-weight: "normal";
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Helvetica";
+  src: url("/fonts/Helvetica-Roman.ttf") format("truetype");
+  font-weight: "normal";
+  font-style: normal;
+}
+
+@theme {
+  --font-secondary: "Helvetica", sans-serif;
+  --font-primary: "Raleway", sans-serif;
+}
