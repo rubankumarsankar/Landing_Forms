@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 /** ===== Config ===== */
 const API_URL = "https://adclubmadras.ayatiworks.com/api/save_lead.php";
-const BROCHURE_URL = "/assets/Cake-Stories-Franchise-Brochure.pdf";
+const BROCHURE_URL = "/files/CS-BROCHURE-FINAL.pdf";
 const WA_NUMBER = "9962522374";
 
 /** POST helper */
