@@ -537,10 +537,12 @@ function MobileFlow() {
               <img src="/smily.png" alt="" className="h-30 w-30" />
             </div>
 
-            <h2 className="mt-15 text-4xl leading-8 font-secondary font-bold text-black/90">
-              Thank you <span className="text-black mb-2">{firstName(lead.name)}</span> <br />
-              <span className="mb-4">for your interest </span> <br /> <span className="mb-2"> in Cake Stories</span>
-            </h2>
+            <h2 className="mt-12 text-4xl leading-tight font-secondary font-bold text-black/90 text-center">
+  Thank you <span className="text-black">{firstName(lead.name)}</span><br />
+  <span>for your interest</span><br />
+  <span>in Cake Stories</span>
+</h2>
+
 
             <p className="mt-8 text-xl font-secondary leading-6 text-slate-600">
               Our franchise team will connect with you soon to
