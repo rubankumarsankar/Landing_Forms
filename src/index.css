@@ -27,7 +27,6 @@ input {
 
 input, textarea {
   -webkit-appearance: none;
-  line-height: 1.4;
   padding-top: 14px;
   padding-bottom: 14px;
   font-size: 17px;
@@ -35,5 +34,5 @@ input, textarea {
 
 input::placeholder {
   transform: translateY(2px);
-  line-height: 1.6;
+  margin-top: -10px;
 }

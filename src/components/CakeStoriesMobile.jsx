@@ -691,7 +691,7 @@ function FieldBlock({
   type={type}
   value={value}
   onChange={(e) => onChange(e.target.value)}
-  placeholder={placeholder}
+  
   className={[
     // ⬇️ increased left padding to prevent left-edge clipping on Android
     "w-full rounded-lg border pl-[18px] pr-4 font-secondary font-medium text-[17px] leading-[1.6]",
