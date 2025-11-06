@@ -688,20 +688,30 @@ function FieldBlock({
       </div>
 
       <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className={[
-          "w-full rounded-xl border px-2 py-2 font-secondary font-medium text-sm sm:text-base",
-          "bg-white placeholder:text-slate-400",
-          "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)]",
-          valid
-            ? "border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#007AFF]/40"
-            : "border-red-300 focus:outline-none focus:ring-2 focus:ring-red-300",
-        ].join(" ")}
-        {...inputProps}
-      />
+  type={type}
+  value={value}
+  onChange={(e) => onChange(e.target.value)}
+  placeholder={placeholder}
+  className={[
+    "w-full rounded-lg border px-4 py-[1.05rem] font-secondary font-medium text-[17px] leading-[1.4]",
+    "bg-white placeholder:text-slate-400 appearance-none",
+    "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)]",
+    "focus:outline-none focus:ring-2 focus:ring-[#007AFF]/40",
+    valid
+      ? "border-slate-200"
+      : "border-slate-300 focus:slate-red-300",
+  ].join(" ")}
+  style={{
+    // ✅ Prevent Android text clipping
+    WebkitAppearance: "none",
+    lineHeight: "1.4",
+    height: "auto",
+    paddingTop: "14px",
+    paddingBottom: "14px",
+  }}
+  {...inputProps}
+/>
+
 
       <p className="mt-2 text-sm sm:text-base text-left leading-6 font-secondary text-black/40">
         {hint}
