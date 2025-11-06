@@ -20,6 +20,10 @@
   --font-secondary: "Helvetica", sans-serif;
   --font-primary: "Raleway", sans-serif;
 }
+input {
+  text-indent: 1px;              /* nudge first glyph */
+  padding-left: 18px !important; /* extra breathing room on the left */
+}
 
 input, textarea {
   -webkit-appearance: none;
