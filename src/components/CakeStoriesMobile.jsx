@@ -213,20 +213,27 @@ function MobileFlow() {
                         />
 
                         <FieldBlock
-                            label="Phone Number"
-                            hint="Our franchise team will call or WhatsApp you within 24 hours."
-                            value={lead.phone || ""}
-                            onChange={(v) => setLead((s) => ({ ...s, phone: v }))}
-                            placeholder="Your mobile number (9876543211)"
-                            type="tel"
-                            inputProps={{
-                                inputMode: "tel",
-                                autoComplete: "tel",
-                                enterKeyHint: "next",
-                                pattern: "[0-9+ ]*",
-                            }}
-                            valid={validPhone(lead.phone)}
-                        />
+  label="Phone Number"
+  hint="Our franchise team will call or WhatsApp you within 24 hours."
+  value={lead.phone || ""}
+  onChange={(v) =>
+    setLead((s) => ({
+      ...s,
+      // keep only digits and cap at 10
+      phone: String(v).replace(/\D/g, "").slice(0, 10),
+    }))
+  }
+  placeholder="Your mobile number (9876543211)"
+  type="tel"
+  inputProps={{
+    inputMode: "numeric",       // better keypad on iOS/Android
+    pattern: "\\d*",            // hint browsers to allow digits
+    autoComplete: "tel",
+    enterKeyHint: "next",
+    maxLength: 10,              // extra guard
+  }}
+  valid={validPhone(lead.phone)}
+/>
 
                         <FieldBlock
                             label="Email"
@@ -688,29 +695,29 @@ function FieldBlock({
             </div>
 
             <input
-  type={type}
-  value={value}
-  onChange={(e) => onChange(e.target.value)}
-  
-  className={[
-    // ⬇️ increased left padding to prevent left-edge clipping on Android
-    "w-full rounded-lg border pl-[18px] pr-4 font-secondary font-medium text-[17px] leading-[1.6]",
-    "bg-white placeholder:text-slate-500 appearance-none",
-    "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)]",
-    "focus:outline-none focus:ring-2 focus:ring-[#007AFF]/40",
-    valid ? "border-slate-200" : "border-slate-300 focus:ring-slate-300",
-  ].join(" ")}
-  style={{
-    WebkitAppearance: "none",
-    height: "auto",
-    paddingTop: "16px",
-    paddingBottom: "16px",
-    lineHeight: "1.6",
-    // ⬇️ tiny nudge so Android doesn’t clip the first placeholder glyph
-    textIndent: "1px",
-  }}
-  {...inputProps}
-/>
+                type={type}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+
+                className={[
+                    // ⬇️ increased left padding to prevent left-edge clipping on Android
+                    "w-full rounded-lg border pl-[18px] pr-4 font-secondary font-medium text-[17px] leading-[1.6]",
+                    "bg-white placeholder:text-slate-500 appearance-none",
+                    "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)]",
+                    "focus:outline-none focus:ring-2 focus:ring-[#007AFF]/40",
+                    valid ? "border-slate-200" : "border-slate-300 focus:ring-slate-300",
+                ].join(" ")}
+                style={{
+                    WebkitAppearance: "none",
+                    height: "auto",
+                    paddingTop: "16px",
+                    paddingBottom: "16px",
+                    lineHeight: "1.6",
+                    // ⬇️ tiny nudge so Android doesn’t clip the first placeholder glyph
+                    textIndent: "1px",
+                }}
+                {...inputProps}
+            />
 
 
 
@@ -726,6 +733,7 @@ const firstName = (s) => (s ? String(s).trim().split(" ")[0] : "");
 const validName = (s) => !!s && String(s).trim().length >= 3;
 // Accepts +country format or 10–15 digits; keeps your broad validation while
 // being friendly to Android/iOS numeric keypads.
-const validPhone = (s) => !!s && /^\+?[0-9 ]{10,15}$/.test(String(s));
+const validPhone = (s) => /^\d{10}$/.test(String(s || ""));
+
 const validEmail = (s) =>
     !!s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s));
