@@ -20,3 +20,16 @@
   --font-secondary: "Helvetica", sans-serif;
   --font-primary: "Raleway", sans-serif;
 }
+
+input, textarea {
+  -webkit-appearance: none;
+  line-height: 1.4;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  font-size: 17px;
+}
+
+input::placeholder {
+  transform: translateY(2px);
+  line-height: 1.6;
+}

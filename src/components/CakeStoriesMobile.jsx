@@ -687,27 +687,28 @@ function FieldBlock({
         {label}
       </div>
 
-      <input
+     <input
   type={type}
   value={value}
   onChange={(e) => onChange(e.target.value)}
   placeholder={placeholder}
   className={[
-    "w-full rounded-lg border px-4 py-[1.05rem] font-secondary font-medium text-[17px] leading-[1.4]",
-    "bg-white placeholder:text-slate-400 appearance-none",
+    "w-full rounded-lg border px-4 font-secondary font-medium text-[17px] leading-[1.6]",
+    "bg-white placeholder:text-slate-500 appearance-none",
     "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)]",
     "focus:outline-none focus:ring-2 focus:ring-[#007AFF]/40",
     valid
       ? "border-slate-200"
-      : "border-slate-300 focus:slate-red-300",
+      : "border-slate-300 focus:ring-slate-300",
   ].join(" ")}
   style={{
-    // ✅ Prevent Android text clipping
     WebkitAppearance: "none",
-    lineHeight: "1.4",
     height: "auto",
-    paddingTop: "14px",
-    paddingBottom: "14px",
+    paddingTop: "16px",
+    paddingBottom: "16px",
+    lineHeight: "1.6",
+    // ✅ ensures placeholder sits correctly in Android/iOS
+    transform: "translateY(0)",
   }}
   {...inputProps}
 />
