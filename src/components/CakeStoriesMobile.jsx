@@ -693,7 +693,7 @@ function FieldBlock({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className={[
-          "w-full rounded-xl border px-4 py-4 font-secondary font-medium text-base sm:text-lg",
+          "w-full rounded-xl border px-2 py-2 font-secondary font-medium text-sm sm:text-base",
           "bg-white placeholder:text-slate-400",
           "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)]",
           valid
