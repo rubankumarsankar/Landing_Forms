@@ -1,10 +1,11 @@
 // CakeStoriesMobile.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 /** ===== Config ===== */
 const API_URL = "https://adclubmadras.ayatiworks.com/api/save_lead.php";
 const BROCHURE_URL = "/files/CS-BROCHURE-FINAL.pdf";
-const WA_NUMBER = "9962522374";
+// Use full international format for WhatsApp. Change if needed.
+const WA_NUMBER = "919962522374";
 
 /** POST helper */
 async function postJSON(url, data) {
@@ -12,28 +13,42 @@ async function postJSON(url, data) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "same-origin",
+    // keepalive helps if user navigates away on mobile right after tapping
+    keepalive: true,
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-/** Storage hook */
+/** Storage hook (resilient to JSON errors) */
 function useLeadStore() {
   const [lead, setLead] = useState({});
   useEffect(() => {
-    const raw = localStorage.getItem("cake_lead");
-    if (raw) setLead(JSON.parse(raw));
+    try {
+      const raw = localStorage.getItem("cake_lead");
+      if (raw) setLead(JSON.parse(raw));
+    } catch {}
   }, []);
   useEffect(() => {
-    localStorage.setItem("cake_lead", JSON.stringify(lead));
+    try {
+      localStorage.setItem("cake_lead", JSON.stringify(lead));
+    } catch {}
   }, [lead]);
   return { lead, setLead };
 }
 
 export default function CakeStoriesMobile() {
   return (
-    <div className="min-h-dvh bg-white text-slate-900">
+    <div
+      className={[
+        // svh is best for iOS/Android when the URL bar collapses;
+        // dvh is a good fallback on modern browsers; we'll set both via utility classes.
+        "min-h-[100svh] md:min-h-dvh bg-white text-slate-900 antialiased touch-manipulation",
+      ].join(" ")}
+      // Ensure the background fills under the notch on iOS
+      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+    >
       <MobileFlow />
     </div>
   );
@@ -44,15 +59,20 @@ function MobileFlow() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [picked, setPicked] = useState(null); // for option screens
+  const containerRef = useRef(null);
 
+  // Restore step
   useEffect(() => {
     const s = localStorage.getItem("cake_step");
     if (s) setStep(Number(s));
   }, []);
+
+  // On step change, persist & scroll top (helps on mobile after keyboard close)
   useEffect(() => {
     localStorage.setItem("cake_step", String(step));
-    setPicked(null);
+    // smooth scroll to top for small screens
+    containerRef.current?.scrollTo?.({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
 
   const save = async (patch) => {
@@ -62,7 +82,7 @@ function MobileFlow() {
       const payload = { ...lead, ...patch };
       const resp = await postJSON(API_URL, payload);
       if (!resp?.ok) throw new Error(resp?.message || "Save failed");
-      setLead({ ...payload, lead_id: resp.lead_id ?? lead.lead_id }); // CS0001 style id
+      setLead({ ...payload, lead_id: resp.lead_id ?? lead.lead_id });
       return true;
     } catch (e) {
       setErr(e.message || "Save failed");
@@ -72,15 +92,14 @@ function MobileFlow() {
     }
   };
 
-  /** Supports both:
+  /** Supports:
    *  saveAndGo("role", value)  // key + value
    *  saveAndGo({ contact_time: value }, 6) // patch object + explicit next step
    */
   const saveAndGo = async (a, b) => {
     let patch, next = step + 1;
-    if (typeof a === "string") {
-      patch = { [a]: b };
-    } else {
+    if (typeof a === "string") patch = { [a]: b };
+    else {
       patch = a || {};
       if (typeof b === "number") next = b;
     }
@@ -106,19 +125,30 @@ function MobileFlow() {
     a.remove();
   };
 
-  // Progress total: 1..6 (Thank-you is step 6). Keeping your design, just correct numbers.
   const TOTAL_STEPS = 6;
 
   return (
-    <div className="mx-auto w-full max-w-md">
-      <Header step={step} total={TOTAL_STEPS} onBack={() => setStep(Math.max(0, step - 1))} />
+    <div
+      ref={containerRef}
+      className="mx-auto w-full max-w-md"
+      // Respect bottom safe-area for iOS; add extra padding so CTA isn’t hidden by home indicator
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px))" }}
+    >
+      <Header step={step} total={TOTAL_STEPS} />
 
-      <main className="px-5 pb-24 pt-4">
+      <main
+        className="px-5 pb-24 pt-4"
+        // Helps when the keyboard appears—mobile browsers avoid obscuring inputs
+        style={{
+          paddingBottom:
+            "max(6rem, calc(6rem + env(safe-area-inset-bottom, 0px)))",
+        }}
+      >
         {/* Step 0: Landing */}
         {step === 0 && (
           <section className="flex flex-col items-center text-center">
             <div className="flex-1 w-full flex items-start justify-center">
-              <div className="w-full max-w-[320px] py-30 text-center">
+              <div className="w-full max-w-[320px] py-10 text-center">
                 <h1 className="font-bold tracking-tight font-primary leading-[1.05] text-3xl sm:text-4xl text-slate-900">
                   Own a
                   <br />
@@ -127,12 +157,12 @@ function MobileFlow() {
                   Franchise
                 </h1>
 
-                <p className="mt-12 text-lg font-medium font-primary leading-6 text-slate-600">
+                <p className="mt-6 text-base sm:text-lg font-medium font-primary leading-6 text-slate-600">
                   Be part of a fast-growing bakery brand
                   from The FreshlyMade, trusted for over 13 years.
                 </p>
 
-                <p className="mt-8 text-sm font-secondary leading-4 text-slate-400">
+                <p className="mt-5 text-sm font-secondary leading-5 text-slate-400">
                   Get full support from setup and chef
                   <br />
                   training to operations and marketing success.
@@ -141,7 +171,7 @@ function MobileFlow() {
                 <img
                   src="/logo.png"
                   alt="Cake Stories"
-                  className="mx-auto mt-10 h-15 opacity-90"
+                  className="mx-auto mt-8 h-12 opacity-90"
                   draggable="false"
                 />
               </div>
@@ -149,7 +179,7 @@ function MobileFlow() {
 
             <button
               onClick={() => setStep(1)}
-              className="mt-8 w-full rounded-lg font-primary bg-[#007AFF] text-white font-semibold py-3 shadow-[0_6px_16px_rgba(0,122,255,0.25)] active:scale-[0.99] transition"
+              className="mt-6 w-full rounded-xl font-primary bg-[#007AFF] text-white font-semibold py-4 shadow-[0_6px_16px_rgba(0,122,255,0.25)] active:scale-[0.99] transition"
             >
               Continue
             </button>
@@ -159,14 +189,9 @@ function MobileFlow() {
         {/* Step 1: Name/Phone/Email */}
         {step === 1 && (
           <section className="pt-2 pb-6">
-            {/* local back */}
-            <div className="flex items-center justify-between -mt-2 mb-10">
-              <button
-                className="w-full rounded-lg font-primary bg-[#007AFF] text-white font-semibold py-2 shadow-[0_6px_16px_rgba(0,122,255,0.25)] transition"
-                onClick={() => setStep(0)}
-              >
-                &lt; Back
-              </button>
+            {/* local back row */}
+            <div className="flex items-center justify-between -mt-2 mb-8">
+              
               <img src="/logo.png" alt="Cake Stories" className="h-15" />
               <span className="w-[18px]" />
             </div>
@@ -177,6 +202,13 @@ function MobileFlow() {
               value={lead.name || ""}
               onChange={(v) => setLead((s) => ({ ...s, name: v }))}
               placeholder="What’s your full name?"
+              // Mobile-friendly input UX
+              inputProps={{
+                autoCorrect: "off",
+                autoCapitalize: "words",
+                autoComplete: "name",
+                enterKeyHint: "next",
+              }}
               valid={validName(lead.name)}
             />
 
@@ -185,8 +217,14 @@ function MobileFlow() {
               hint="Our franchise team will call or WhatsApp you within 24 hours."
               value={lead.phone || ""}
               onChange={(v) => setLead((s) => ({ ...s, phone: v }))}
-              placeholder="Could you share your mobile number?"
+              placeholder="Your mobile number (9876543211)"
               type="tel"
+              inputProps={{
+                inputMode: "tel",
+                autoComplete: "tel",
+                enterKeyHint: "next",
+                pattern: "[0-9+ ]*",
+              }}
               valid={validPhone(lead.phone)}
             />
 
@@ -195,16 +233,22 @@ function MobileFlow() {
               hint="We’ll send your Cake Stories franchise brochure and setup details."
               value={lead.email || ""}
               onChange={(v) => setLead((s) => ({ ...s, email: v }))}
-              placeholder="Please share your email address"
+              placeholder="name@example.com"
               type="email"
+              inputProps={{
+                inputMode: "email",
+                autoComplete: "email",
+                enterKeyHint: "done",
+                // Prevent iOS zoom (we keep font-size >= 16px too)
+              }}
               valid={validEmail(lead.email)}
             />
 
             <button
               onClick={onContinueStep1}
               disabled={loading}
-              className="mt-6 w-full rounded-lg bg-[#007AFF] text-white font-primary font-semibold py-3
-               shadow-[0_8px_20px_rgba(0,122,255,0.28)] disabled:opacity-50 active:scale-[0.99] transition"
+              className="mt-6 w-full rounded-xl bg-[#007AFF] text-white font-primary font-semibold py-4
+                 shadow-[0_8px_20px_rgba(0,122,255,0.28)] disabled:opacity-50 active:scale-[0.99] transition"
             >
               {loading ? "Saving…" : "Continue"}
             </button>
@@ -216,10 +260,12 @@ function MobileFlow() {
         {/* Step 2: Role (auto-advance on tap) */}
         {step === 2 && (
           <section>
-            <img src="/logo.png" alt="" className="h-15 mb-10" />
+            <img src="/logo.png" alt="" className="h-12 mb-8" />
 
-            <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">which best describes you?</p>
+            <h2 className="text-3xl sm:text-4xl font-primary font-bold mb-2">Mr. {firstName(lead.name)},</h2>
+            <p className="text-lg sm:text-xl font-secondary text-black/60 mt-3 mb-8">
+              which best describes you?
+            </p>
 
             <OptionAutoAdvanceList
               onPick={(val) => saveAndGo("role", val)}
@@ -230,11 +276,17 @@ function MobileFlow() {
               ]}
             />
 
-            <div className="flex items-center justify-between mt-10">
-              <button className="text-xl rounded-lg font-primary border border-[#007AFF] px-5 py-2  text-[#007AFF]" onClick={() => setStep(1)}>
+            <div className="flex items-center justify-between mt-8">
+              <button
+                className="text-base sm:text-lg rounded-lg font-primary border border-[#007AFF] px-5 py-3 text-[#007AFF]"
+                onClick={() => setStep(1)}
+              >
                 Back
               </button>
-              <button className="rounded-lg bg-[#007AFF] text-white text-xl font-semibold px-5 py-2 opacity-60 cursor-default" disabled>
+              <button
+                className="rounded-lg bg-[#007AFF] text-white text-base sm:text-lg font-semibold px-5 py-3 opacity-60 cursor-default"
+                disabled
+              >
                 Continue
               </button>
             </div>
@@ -243,13 +295,13 @@ function MobileFlow() {
           </section>
         )}
 
-        {/* Step 3: Business Owner → Business type (auto-advance with icons) */}
+        {/* Step 3/4/5 branches */}
         {step === 3 && lead.role === "Business Owner" && (
-          <section className="mt-10">
-            <h2 className="text-4xl font-primary font-semibold mb-4">Mr. {firstName(lead.name)},</h2>
-            <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p>
+          <section className="mt-6">
+            <h2 className="text-3xl sm:text-4xl font-primary font-semibold mb-2">Mr. {firstName(lead.name)},</h2>
+            <p className="text-base sm:text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p>
 
-            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">
+            <p className="text-lg sm:text-xl font-secondary text-black/60 mt-5 mb-8">
               What kind of business do you currently operate?
             </p>
 
@@ -263,27 +315,19 @@ function MobileFlow() {
               ]}
             />
 
-            <div className="flex items-center justify-between mt-10">
-              <button className="text-xl rounded-lg font-primary border border-[#007AFF] px-5 py-2  text-[#007AFF]" onClick={() => setStep(2)}>
-                Back
-              </button>
-              <button className="rounded-lg bg-[#007AFF] text-white text-xl font-primary font-semibold px-5 py-2 opacity-60 cursor-default" disabled>
-                Continue
-              </button>
-            </div>
-
-            {err && <p className="text-sm text-red-600 mt-2">{err}</p>}
+            <NavLock />
+            <BackStub onBack={() => setStep(2)} />
           </section>
         )}
 
         {step === 4 && lead.role === "Business Owner" && (
           <section>
-            <img src="/logo.png" alt="" className="h-15 mb-10" />
+            <img src="/logo.png" alt="" className="h-12 mb-8" />
+            <h2 className="text-3xl sm:text-4xl font-primary font-bold mb-2">Mr. {firstName(lead.name)},</h2>
 
-            <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
-
-            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">What’s your available investment range for expansion?</p>
+            <p className="text-lg sm:text-xl font-secondary text-black/60 mt-5 mb-8">
+              What’s your available investment range for expansion?
+            </p>
 
             <OptionAutoAdvanceList
               onPick={(v) => saveAndGo("investment_range", v)}
@@ -294,27 +338,19 @@ function MobileFlow() {
               ]}
             />
 
-            <div className="flex items-center justify-between mt-10">
-              <button className="text-xl rounded-lg font-primary border border-[#007AFF] px-5 py-2  text-[#007AFF]" onClick={() => setStep(3)}>
-                Back
-              </button>
-              <button className="rounded-lg bg-[#007AFF] text-white text-xl font-semibold px-5 py-2 opacity-60 cursor-default" disabled>
-                Continue
-              </button>
-            </div>
-
-            {err && <p className="text-sm text-red-600 mt-2">{err}</p>}
+            <NavLock />
+            <BackStub onBack={() => setStep(3)} />
           </section>
         )}
 
         {step === 5 && lead.role === "Business Owner" && (
           <section>
-            <img src="/logo.png" alt="" className="h-15 mb-10" />
+            <img src="/logo.png" alt="" className="h-12 mb-8" />
+            <h2 className="text-3xl sm:text-4xl font-primary font-bold mb-2">Mr. {firstName(lead.name)},</h2>
 
-            <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
-
-            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">When is the best time for our team to reach you?</p>
+            <p className="text-lg sm:text-xl font-secondary text-black/60 mt-5 mb-8">
+              When is the best time for our team to reach you?
+            </p>
 
             <OptionAutoAdvanceList
               options={[
@@ -325,29 +361,20 @@ function MobileFlow() {
               onPick={(v) => saveAndGo({ contact_time: v }, 6)}
             />
 
-            <div className="flex items-center justify-between mt-10">
-              {/* FIX: back should return to step 4, not 1 */}
-              <button className="text-xl rounded-lg font-primary border border-[#007AFF] px-5 py-2  text-[#007AFF]" onClick={() => setStep(4)}>
-                Back
-              </button>
-              <button className="rounded-lg bg-[#007AFF] text-white text-xl font-semibold px-5 py-2 opacity-60 cursor-default" disabled>
-                Continue
-              </button>
-            </div>
-
-            {err && <p className="text-sm text-red-600 mt-2">{err}</p>}
+            <NavLock />
+            <BackStub onBack={() => setStep(4)} />
           </section>
         )}
 
-        {/* ===== Branch: Investor ===== */}
+        {/* ===== Investor ===== */}
         {step === 3 && lead.role === "Investor" && (
           <section>
-            <img src="/logo.png" alt="" className="h-15 mb-10" />
+            <img src="/logo.png" alt="" className="h-12 mb-8" />
+            <h2 className="text-3xl sm:text-4xl font-primary font-bold mb-2">Mr. {firstName(lead.name)},</h2>
 
-            <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
-
-            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">What type of franchise are you most interested in?</p>
+            <p className="text-lg sm:text-xl font-secondary text-black/60 mt-5 mb-8">
+              What type of franchise are you most interested in?
+            </p>
 
             <OptionAutoAdvanceList
               options={[
@@ -359,27 +386,19 @@ function MobileFlow() {
               onPick={(v) => saveAndGo("investor_interest", v)}
             />
 
-            <div className="flex items-center justify-between mt-10">
-              <button className="text-xl rounded-lg font-primary border border-[#007AFF] px-5 py-2  text-[#007AFF]" onClick={() => setStep(2)}>
-                Back
-              </button>
-              <button className="rounded-lg bg-[#007AFF] text-white text-xl font-semibold px-5 py-2 opacity-60 cursor-default" disabled>
-                Continue
-              </button>
-            </div>
-
-            {err && <p className="text-sm text-red-600 mt-2">{err}</p>}
+            <NavLock />
+            <BackStub onBack={() => setStep(2)} />
           </section>
         )}
 
         {step === 4 && lead.role === "Investor" && (
           <section>
-            <img src="/logo.png" alt="" className="h-15 mb-10" />
+            <img src="/logo.png" alt="" className="h-12 mb-8" />
+            <h2 className="text-3xl sm:text-4xl font-primary font-bold mb-2">Mr. {firstName(lead.name)},</h2>
 
-            <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
-
-            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">What’s your investment budget?</p>
+            <p className="text-lg sm:text-xl font-secondary text-black/60 mt-5 mb-8">
+              What’s your investment budget?
+            </p>
 
             <OptionAutoAdvanceList
               options={[
@@ -390,27 +409,19 @@ function MobileFlow() {
               onPick={(v) => saveAndGo("investor_budget", v)}
             />
 
-            <div className="flex items-center justify-between mt-10">
-              <button className="text-xl rounded-lg font-primary border border-[#007AFF] px-5 py-2  text-[#007AFF]" onClick={() => setStep(3)}>
-                Back
-              </button>
-              <button className="rounded-lg bg-[#007AFF] text-white text-xl font-semibold px-5 py-2 opacity-60 cursor-default" disabled>
-                Continue
-              </button>
-            </div>
-
-            {err && <p className="text-sm text-red-600 mt-2">{err}</p>}
+            <NavLock />
+            <BackStub onBack={() => setStep(3)} />
           </section>
         )}
 
         {step === 5 && lead.role === "Investor" && (
           <section>
-            <img src="/logo.png" alt="" className="h-15 mb-10" />
+            <img src="/logo.png" alt="" className="h-12 mb-8" />
+            <h2 className="text-3xl sm:text-4xl font-primary font-bold mb-2">Mr. {firstName(lead.name)},</h2>
 
-            <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
-
-            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">When is a good time for us to contact you?</p>
+            <p className="text-lg sm:text-xl font-secondary text-black/60 mt-5 mb-8">
+              When is a good time for us to contact you?
+            </p>
 
             <OptionAutoAdvanceList
               options={[
@@ -421,28 +432,20 @@ function MobileFlow() {
               onPick={(v) => saveAndGo({ investor_contact_time: v }, 6)}
             />
 
-            <div className="flex items-center justify-between mt-10">
-              <button className="text-xl rounded-lg font-primary border border-[#007AFF] px-5 py-2  text-[#007AFF]" onClick={() => setStep(4)}>
-                Back
-              </button>
-              <button className="rounded-lg bg-[#007AFF] text-white text-xl font-semibold px-5 py-2 opacity-60 cursor-default" disabled>
-                Continue
-              </button>
-            </div>
-
-            {err && <p className="text-sm text-red-600 mt-2">{err}</p>}
+            <NavLock />
+            <BackStub onBack={() => setStep(4)} />
           </section>
         )}
 
-        {/* ===== Branch: Exploring ===== */}
+        {/* ===== Exploring ===== */}
         {step === 3 && lead.role === "Exploring" && (
           <section>
-            <img src="/logo.png" alt="" className="h-15 mb-10" />
+            <img src="/logo.png" alt="" className="h-12 mb-8" />
+            <h2 className="text-3xl sm:text-4xl font-primary font-bold mb-2">Mr. {firstName(lead.name)},</h2>
 
-            <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
-
-            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">What kind of business are you most excited to start?</p>
+            <p className="text-lg sm:text-xl font-secondary text-black/60 mt-5 mb-8">
+              What kind of business are you most excited to start?
+            </p>
 
             <OptionAutoAdvanceList
               options={[
@@ -454,27 +457,19 @@ function MobileFlow() {
               onPick={(v) => saveAndGo("exploring_kind", v)}
             />
 
-            <div className="flex items-center justify-between mt-10">
-              <button className="text-xl rounded-lg font-primary border border-[#007AFF] px-5 py-2  text-[#007AFF]" onClick={() => setStep(2)}>
-                Back
-              </button>
-              <button className="rounded-lg bg-[#007AFF] text-white text-xl font-semibold px-5 py-2 opacity-60 cursor-default" disabled>
-                Continue
-              </button>
-            </div>
-
-            {err && <p className="text-sm text-red-600 mt-2">{err}</p>}
+            <NavLock />
+            <BackStub onBack={() => setStep(2)} />
           </section>
         )}
 
         {step === 4 && lead.role === "Exploring" && (
           <section>
-            <img src="/logo.png" alt="" className="h-15 mb-10" />
+            <img src="/logo.png" alt="" className="h-12 mb-8" />
+            <h2 className="text-3xl sm:text-4xl font-primary font-bold mb-2">Mr. {firstName(lead.name)},</h2>
 
-            <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
-
-            <p className="text-xl font-secondary text-black/60 mt-5 mb-10">What’s your estimated investment capacity?</p>
+            <p className="text-lg sm:text-xl font-secondary text-black/60 mt-5 mb-8">
+              What’s your estimated investment capacity?
+            </p>
 
             <OptionAutoAdvanceList
               options={[
@@ -485,27 +480,19 @@ function MobileFlow() {
               onPick={(v) => saveAndGo("exploring_budget", v)}
             />
 
-            <div className="flex items-center justify-between mt-10">
-              <button className="text-xl rounded-lg font-primary border border-[#007AFF] px-5 py-2  text-[#007AFF]" onClick={() => setStep(3)}>
-                Back
-              </button>
-              <button className="rounded-lg bg-[#007AFF] text-white text-xl font-semibold px-5 py-2 opacity-60 cursor-default" disabled>
-                Continue
-              </button>
-            </div>
-
-            {err && <p className="text-sm text-red-600 mt-2">{err}</p>}
+            <NavLock />
+            <BackStub onBack={() => setStep(3)} />
           </section>
         )}
 
         {step === 5 && lead.role === "Exploring" && (
           <section>
-            <img src="/logo.png" alt="" className="h-15 mb-10" />
+            <img src="/logo.png" alt="" className="h-12 mb-8" />
+            <h2 className="text-3xl sm:text-4xl font-primary font-bold mb-2">Mr. {firstName(lead.name)},</h2>
 
-            <h2 className="text-4xl font-primary font-bold mb-4">Mr. {firstName(lead.name)},</h2>
-            {/* <p className="text-lg font-secondary text-slate-500 -mt-1">tell us a bit about your business</p> */}
-
-            <p className="text-xl font-secondary text-black/60 mt-5 mb-10"> When are you planning to start your business?</p>
+            <p className="text-lg sm:text-xl font-secondary text-black/60 mt-5 mb-8">
+              When are you planning to start your business?
+            </p>
 
             <OptionAutoAdvanceList
               options={[
@@ -517,47 +504,40 @@ function MobileFlow() {
               onPick={(v) => saveAndGo({ exploring_timeline: v }, 6)}
             />
 
-            <div className="flex items-center justify-between mt-10">
-              <button className="text-xl rounded-lg font-primary border border-[#007AFF] px-5 py-2  text-[#007AFF]" onClick={() => setStep(4)}>
-                Back
-              </button>
-              <button className="rounded-lg bg-[#007AFF] text-white text-xl font-semibold px-5 py-2 opacity-60 cursor-default" disabled>
-                Continue
-              </button>
-            </div>
-
-            {err && <p className="text-sm text-red-600 mt-2">{err}</p>}
+            <NavLock />
+            <BackStub onBack={() => setStep(4)} />
           </section>
         )}
 
-        {/* Step 6: Thank-you screen */}
+        {/* Step 6: Thank-you */}
         {step === 6 && (
-          <section className="text-center pt-20 pb-8">
-            <div className="mx-auto h-30 w-30 rounded-full grid place-items-center">
-              <img src="/smily.png" alt="" className="h-30 w-30" />
+          <section className="text-center pt-16 pb-8">
+            <div className="mx-auto h-28 w-28 rounded-full grid place-items-center">
+              <img src="/smily.png" alt="" className="h-28 w-28" />
             </div>
 
-            <h2 className="mt-12 text-4xl leading-tight font-primary font-bold text-black/90 text-center">
-  Thank you <span className="text-black">{firstName(lead.name)}</span><br />
-  <span>for your interest</span><br />
-  <span>in Cake Stories</span>
-</h2>
+            <h2 className="mt-10 text-3xl sm:text-4xl leading-tight font-primary font-bold text-black/90 text-center">
+              Thank you <span className="text-black">{firstName(lead.name)}</span>
+              <br />
+              <span>for your interest</span>
+              <br />
+              <span>in Cake Stories</span>
+            </h2>
 
-
-            <p className="mt-8 text-xl font-secondary leading-6 text-slate-600">
+            <p className="mt-6 text-base sm:text-lg font-secondary leading-6 text-slate-600">
               Our franchise team will connect with you soon to
               discuss your preferred city and model options.
             </p>
-            <p className="mt-6 text-lg font-secondary  text-slate-400">
+            <p className="mt-4 text-sm sm:text-base font-secondary text-slate-400">
               Get ready to start your sweet success story!
             </p>
 
             <button
               onClick={downloadBrochure}
-              className="mt-6 inline-flex flex-col border border-blue-300 hover rounded-lg py-2 px-5 cursor-pointer items-center justify-center"
+              className="mt-6 inline-flex flex-col border border-blue-300 hover:shadow rounded-xl py-3 px-5 cursor-pointer items-center justify-center active:scale-[0.99] transition"
               aria-label="Download Brochure"
             >
-              <span className="text-2xl font-semibold text-black/90">
+              <span className="text-xl font-semibold text-black/90">
                 Download Brochure
               </span>
               <img src="/down.png" alt="" className="mt-2 h-6 w-6" />
@@ -565,12 +545,15 @@ function MobileFlow() {
 
             <button
               onClick={() => {
-                const msg = `Hi, I'm ${firstName(lead.name)}. I just submitted the Cake Stories franchise form. Please share the brochure and next steps.`;
-                const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+                const msg = `Hi, I'm ${firstName(
+                  lead.name
+                )}. I just submitted the Cake Stories franchise form. Please share the brochure and next steps.`;
+                const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(
+                  msg
+                )}`;
                 window.open(url, "_blank", "noopener,noreferrer");
               }}
-              className="mt-8 w-full rounded-lg bg-[#007AFF]  cursor-pointer  text-white font-semibold py-3
-               shadow-[0_8px_20px_rgba(0,122,255,0.28)] active:scale-[0.99] font-primary transition"
+              className="mt-6 w-full rounded-xl bg-[#007AFF] cursor-pointer text-white font-semibold py-4 shadow-[0_8px_20px_rgba(0,122,255,0.28)] active:scale-[0.99] font-primary transition"
             >
               WhatsApp
             </button>
@@ -582,17 +565,20 @@ function MobileFlow() {
 }
 
 /* ================= Header ================= */
-
 function Header({ step, total }) {
-  // show steps only for 1..total (landing is 0)
   const showSteps = step > 0 && step <= total;
   const current = Math.min(Math.max(step, 1), total);
   const pct = Math.round((current / total) * 100);
 
   return (
-    <header className="sticky top-0 z-10 bg-white">
-      <div className="mx-auto max-w-md px-5 pt-3">
-        {/* top row */}
+    <header
+      className="sticky top-0 z-10 bg-white"
+      style={{
+        // Safe-area top padding for iOS notch
+        paddingTop: "env(safe-area-inset-top, 0px)",
+      }}
+    >
+      <div className="mx-auto max-w-md px-5 pt-2">
         <div className="flex items-center justify-between">
           <div className="min-w-[72px] text-[13px] font-semibold text-slate-700">
             {showSteps ? `Step ${current}` : ""}
@@ -602,12 +588,11 @@ function Header({ step, total }) {
           </div>
         </div>
 
-        {/* progress */}
         {showSteps && (
           <div className="mt-3 mb-2">
             <div className="h-[2px] w-full rounded bg-slate-200">
               <div
-                className="h-[2px] rounded bg-[#5B61F6] transition-all"
+                className="h-[2px] rounded bg-[#5B61F6] transition-all will-change-[width]"
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -618,21 +603,46 @@ function Header({ step, total }) {
   );
 }
 
-/* ============ UI bits ============ */
+/* ============ Tiny helpers ============ */
+function NavLock() {
+  return (
+    <div className="flex items-center justify-between mt-8 opacity-80">
+      <button className="text-base rounded-lg font-primary border border-[#007AFF] px-5 py-3 text-[#007AFF]" disabled>
+        Back
+      </button>
+      <button className="rounded-lg bg-[#007AFF] text-white text-base font-semibold px-5 py-3 opacity-60 cursor-default" disabled>
+        Continue
+      </button>
+    </div>
+  );
+}
 
+function BackStub({ onBack }) {
+  return (
+    <div className="mt-2">
+      <button
+        className="block w-full text-center text-sm text-slate-500 underline underline-offset-4"
+        onClick={onBack}
+      >
+        Back
+      </button>
+    </div>
+  );
+}
+
+/* ============ UI bits ============ */
 function AutoIconSelect({ options, onPick }) {
   return (
-    <ul className="space-y-8 mt-4">
+    <ul className="space-y-6 mt-2">
       {options.map((opt) => (
         <li key={opt.value}>
           <button
             onClick={() => onPick(opt.value)}
-            className="w-full rounded-xl font-secondary  px-4 py-4 text-left border transition bg-white
-                       flex items-center gap-4 border-slate-200 hover:bg-slate-50
-                       active:scale-[0.98]"
+            className="w-full rounded-xl font-secondary px-4 py-4 text-left border transition bg-white
+                       flex items-center gap-4 border-slate-200 hover:bg-slate-50 active:scale-[0.98]"
           >
             <img src={opt.img} alt="" className="h-10 w-10 object-contain" />
-            <span className="text-2xl font-semibold text-slate-800">{opt.label}</span>
+            <span className="text-lg sm:text-2xl font-semibold text-slate-800">{opt.label}</span>
           </button>
         </li>
       ))}
@@ -642,14 +652,14 @@ function AutoIconSelect({ options, onPick }) {
 
 function OptionAutoAdvanceList({ options, onPick }) {
   return (
-    <ul className="space-y-8">
+    <ul className="space-y-6">
       {options.map((opt) => (
         <li key={opt.value}>
           <button
             onClick={() => onPick(opt.value)}
             className={[
-              "w-full rounded-lg border font-secondary border-slate-200 bg-white",
-              "px-4 py-5 text-center text-2xl font-semibold text-slate-900",
+              "w-full rounded-xl border font-secondary border-slate-200 bg-white",
+              "px-4 py-4 sm:py-5 text-lg sm:text-2xl font-semibold text-slate-900",
               "shadow-sm hover:bg-slate-50 active:scale-[0.995] transition",
             ].join(" ")}
           >
@@ -669,28 +679,33 @@ function FieldBlock({
   placeholder,
   type = "text",
   valid = true,
+  inputProps = {},
 }) {
   return (
-    <div className="mb-5 mt-6">
-      <div className="text-xl font-primary font-bold text-left text-slate-900 mb-2">{label}</div>
+    <div className="mb-5 mt-5">
+      <div className="text-lg sm:text-xl font-primary font-bold text-left text-slate-900 mb-2">
+        {label}
+      </div>
 
       <input
         type={type}
-        inputMode={type === "tel" ? "tel" : undefined}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className={[
-          "w-full rounded-lg border px-4 py-4 font-secondary font-medium text-lg leading-6",
+          "w-full rounded-xl border px-4 py-4 font-secondary font-medium text-base sm:text-lg leading-6",
           "bg-white placeholder:text-slate-400",
           "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.02)]",
           valid
             ? "border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#007AFF]/40"
             : "border-red-300 focus:outline-none focus:ring-2 focus:ring-red-300",
         ].join(" ")}
+        {...inputProps}
       />
 
-      <p className="mt-2 text-base text-left leading-6 font-secondary text-black/40">{hint}</p>
+      <p className="mt-2 text-sm sm:text-base text-left leading-6 font-secondary text-black/40">
+        {hint}
+      </p>
     </div>
   );
 }
@@ -698,5 +713,8 @@ function FieldBlock({
 /* ============ Validators ============ */
 const firstName = (s) => (s ? String(s).trim().split(" ")[0] : "");
 const validName = (s) => !!s && String(s).trim().length >= 3;
-const validPhone = (s) => !!s && /^\+?[0-9]{10,15}$/.test(String(s));
-const validEmail = (s) => !!s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s));
+// Accepts +country format or 10–15 digits; keeps your broad validation while
+// being friendly to Android/iOS numeric keypads.
+const validPhone = (s) => !!s && /^\+?[0-9 ]{10,15}$/.test(String(s));
+const validEmail = (s) =>
+  !!s && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s));
