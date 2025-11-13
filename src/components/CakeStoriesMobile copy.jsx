@@ -2,45 +2,24 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 /** ===== Config ===== */
-const API_URL = "https://cakestories.ayatiworks.com/api/save_lead.php";
-// const API_URL = "https://script.google.com/macros/s/AKfycbzE8I3qI1ChV_nhVuvgUBfezvwVEq9uOyp7V5zqYGFiQ7XVApz0VoeYDrNLOB7vlTDM4Q/exec";
+const API_URL = "https://adclubmadras.ayatiworks.com/api/save_lead.php";
 const BROCHURE_URL = "/files/CS-BROCHURE-FINAL.pdf";
 // Use full international format for WhatsApp. Change if needed.
 const WA_NUMBER = "919962522374";
 
 /** POST helper */
-// async function postJSON(url, data) {
-//     const res = await fetch(url, {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         credentials: "same-origin",
-//         // keepalive helps if user navigates away on mobile right after tapping
-//         keepalive: true,
-//         body: JSON.stringify(data),
-//     });
-//     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-//     return res.json();
-// }
-
 async function postJSON(url, data) {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8",
-    },
-    body: JSON.stringify(data),
-    keepalive: true,
-  });
-
-  const json = await res.json().catch(() => ({}));
-
-  if (!res.ok || json.ok === false) {
-    throw new Error(json.error || `HTTP ${res.status}`);
-  }
-
-  return json;
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        // keepalive helps if user navigates away on mobile right after tapping
+        keepalive: true,
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
 }
-
 
 /** Storage hook (resilient to JSON errors) */
 function useLeadStore() {
